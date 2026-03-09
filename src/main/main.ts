@@ -30,7 +30,7 @@ expressApp
     const message =
       err.code === 'EADDRINUSE'
         ? `Port 9093 is already in use. Another app or DigiFlag instance may be using it.\n\n${failedToLoadAPI.message}`
-        : failedToLoadAPI.message;
+        : `Failed to start API: ${err.message}`;
     dialog.showMessageBoxSync({
       type: 'error',
       title: 'DigiFlag – API Error',

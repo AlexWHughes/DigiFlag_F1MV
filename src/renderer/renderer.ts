@@ -533,7 +533,7 @@ function saveSettings(host: string, port: number): void {
         </div>
         <div class="toast-body">
         ${i18next.t('toastOnlyHostSaved')}
-        <p>The Port Number ${port} is invalid. ${i18next.t('toastInvalidPortNumberBody')}</p>
+        <p>${i18next.t('toastPortInvalid', { port })} ${i18next.t('toastInvalidPortNumberBody')}</p>
         </div>
     </div>
         `);
@@ -565,6 +565,22 @@ function createNewInstance(url?: string | URL, windowTitle?: string) {
   }
 }
 
+/** IPv4 regex for host validation (same as in Network settings). */
+const ipv4HostPattern =
+  /^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+/** Hostname (domain labels) for validation: one or more labels, each alphanumeric with optional hyphens/dots. */
+const hostnamePattern = /^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$/;
+
+function isValidHost(value: string): boolean {
+  const trimmed = value.trim().replace(/\/+$/, '');
+  if (trimmed.length === 0 || trimmed.length > 253) return false;
+  return (
+    ipv4HostPattern.test(trimmed) ||
+    (trimmed.includes(':') && trimmed.length <= 45) ||
+    hostnamePattern.test(trimmed)
+  );
+}
+
 /**
  * Loads host and port from localStorage into config when present and valid.
  */
@@ -572,7 +588,13 @@ function loadSettings() {
   const hostData = localStorage.getItem('host');
   const portData = localStorage.getItem('port');
   if (hostData != null && hostData !== '') {
-    config.host = hostData;
+    const trimmed = hostData.trim().replace(/\/+$/, '');
+    if (isValidHost(hostData)) {
+      config.host = trimmed;
+    } else {
+      if (debugOn) console.warn('loadSettings: invalid host in localStorage, ignoring:', hostData);
+      localStorage.removeItem('host');
+    }
   }
   if (portData != null && portData !== '') {
     const parsed = Number.parseInt(portData, 10);
@@ -760,33 +782,23 @@ async function turnOff(flag: string, driverNumber?: string) {
   if (sc) {
     $('#digiflag').prop('src', getGifPath('sc'));
     url = `${base}/sc.gif`;
-    return;
-  }
-
-  if (vsc) {
+  } else if (vsc) {
     $('#digiflag').prop('src', getGifPath('vsc'));
     url = `${base}/vsc.gif`;
-    return;
-  }
-
-  if (red) {
+  } else if (red) {
     $('#digiflag').prop('src', getGifPath('red'));
     url = `${base}/red.gif`;
-    return;
-  }
-
-  if (yellow) {
+  } else if (yellow) {
     $('#digiflag').prop('src', getGifPath('yellow'));
     url = `${base}/yellow.gif`;
-    return;
-  }
-
-  if (currentRainStatus === '1') {
-    $('#digiflag').prop('src', getGifPath('rain'));
-    url = `${base}/rain.gif`;
   } else {
-    $('#digiflag').prop('src', getGifPath('void'));
-    url = mvLogoSwitch ? `${base}/mv.gif` : `${base}/void.gif`;
+    if (currentRainStatus === '1') {
+      $('#digiflag').prop('src', getGifPath('rain'));
+      url = `${base}/rain.gif`;
+    } else {
+      $('#digiflag').prop('src', getGifPath('void'));
+      url = mvLogoSwitch ? `${base}/mv.gif` : `${base}/void.gif`;
+    }
   }
 
   if (currentMode.valueOf() === 1) {
