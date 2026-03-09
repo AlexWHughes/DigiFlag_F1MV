@@ -11,6 +11,7 @@
   "extraFlags": "Extra Flaggen",
   "failedToConnect": "Verbinung zu F1MV ist fehlgeschlagen",
   "failedToRetrieveCurrentSession": "Verbindung zu aktueller Session ist fehlgeschlagen",
+  "interfaceForPixoo64": "Schnittstelle für Pixoo64 (GIF-Server):",
   "general": "Allgemein",
   "language": "Sprache",
   "layout": "Layout",

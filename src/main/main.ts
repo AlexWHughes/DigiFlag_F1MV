@@ -2,16 +2,19 @@ import { ip } from 'address';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import express from 'express';
 import { readFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import type { FilesConfig, Gifs, Theme } from '../renderer/types/filesConfig.d.ts';
 import { failedToLoadAPI } from './errorTable.js';
 import {
   getAlwaysOnTopState,
+  getPixoo64InterfaceIP,
   getWindowPositionSettings,
   getWindowSizeSettings,
   saveAlwaysOnTopState,
   saveWindowPos,
   saveWindowSize,
+  setPixoo64InterfaceIP,
 } from './storage.js';
 
 const version = app.getVersion();
@@ -395,8 +398,35 @@ ipcMain.handle('set-always-on-top', () => {
 });
 
 ipcMain.handle('get-expressIP', () => {
-  const expressIP = ip();
-  return expressIP;
+  const override = getPixoo64InterfaceIP();
+  return override !== null ? override : ip();
+});
+
+ipcMain.handle('get-network-interfaces', () => {
+  const interfaces = os.networkInterfaces();
+  const result: { label: string; address: string }[] = [];
+  for (const [name, addrs] of Object.entries(interfaces)) {
+    if (!addrs) continue;
+    for (const addr of addrs) {
+      if (addr.family === 'IPv4' && !addr.internal) {
+        result.push({ label: `${name} (${addr.address})`, address: addr.address });
+      }
+    }
+  }
+  return result;
+});
+
+ipcMain.handle('get-expressIP-for-pixoo', () => {
+  const override = getPixoo64InterfaceIP();
+  return override !== null ? override : ip();
+});
+
+ipcMain.handle('get-pixoo64-interface-ip', () => {
+  return getPixoo64InterfaceIP();
+});
+
+ipcMain.handle('set-expressIP-for-pixoo', (_, address: string | null) => {
+  setPixoo64InterfaceIP(address === '' ? null : address);
 });
 
 ipcMain.handle('new-window', () => {

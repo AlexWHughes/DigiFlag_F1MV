@@ -11,6 +11,7 @@
   "extraFlags": "Banderas adicionales",
   "failedToConnect": "Fallo de conexión con MultiViewer",
   "failedToRetrieveCurrentSession": "Fallo al recuperar la sesión actual",
+  "interfaceForPixoo64": "Interfaz para Pixoo64 (servidor GIF):",
   "general": "General",
   "language": "Idioma",
   "layout": "Diseño de página",

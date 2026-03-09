@@ -77,3 +77,21 @@ export function saveAlwaysOnTopState(alwaysOnTop: boolean): void {
   storage.set('alwaysOnTop', alwaysOnTop);
   console.log(`Always on Top State (${alwaysOnTop}) Saved:`, alwaysOnTop);
 }
+
+/** IP address to use for Pixoo64 GIF URLs (interface binding). Empty string = use auto (default). */
+const PIXOO64_INTERFACE_IP_KEY = 'pixoo64InterfaceIP';
+
+export function getPixoo64InterfaceIP(): string | null {
+  const value = storage.get(PIXOO64_INTERFACE_IP_KEY);
+  if (value === undefined || value === null || value === '') return null;
+  return value as string;
+}
+
+export function setPixoo64InterfaceIP(ip: string | null): void {
+  if (ip === null || ip === '') {
+    storage.delete(PIXOO64_INTERFACE_IP_KEY);
+  } else {
+    storage.set(PIXOO64_INTERFACE_IP_KEY, ip);
+  }
+  console.log('Pixoo64 interface IP Saved:', ip ?? '(auto)');
+}

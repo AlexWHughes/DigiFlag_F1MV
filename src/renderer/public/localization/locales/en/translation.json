@@ -12,6 +12,7 @@
   "failedToConnect": "Failed to connect to MultiViewer",
   "failedToRetrieveCurrentSession": "Failed to Retrieve Current Session",
   "general": "General",
+  "interfaceForPixoo64": "Interface for Pixoo64 (GIF server):",
   "language": "Language",
   "layout": "Layout",
   "mapTheme.satelliteMap": "Satellite Map",

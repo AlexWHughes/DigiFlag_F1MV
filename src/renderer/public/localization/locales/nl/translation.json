@@ -11,6 +11,7 @@
   "extraFlags": "Extra vlaggen",
   "failedToConnect": "Connectie naar MultiViewer mislukt",
   "failedToRetrieveCurrentSession": "Ophalen van de huidige sessie mislukt",
+  "interfaceForPixoo64": "Interface voor Pixoo64 (GIF-server):",
   "general": "Algemeen",
   "language": "Language",
   "layout": "Indeling",

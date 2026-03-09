@@ -1274,6 +1274,34 @@ $(function () {
       `<label for="port">MultiViewer API Port:</label>
     <input type="number" class="form-control-sm text-bg-dark" maxlength="5" value="${sanitizedPort}" id="port" required min="0" max="65535">`
     );
+    // Interface for Pixoo64 (multi-interface support)
+    $('#networkSettings').append(
+      '<label for="pixoo64Interface" data-i18n="interfaceForPixoo64">Interface for Pixoo64 (GIF server):</label>'
+    );
+    const pixoo64Select = $(
+      '<select class="form-control-sm form-select text-bg-dark" id="pixoo64Interface"></select>'
+    );
+    $('#networkSettings').append(pixoo64Select);
+    void (async () => {
+      const currentStored = await globalThis.api.getPixoo64InterfaceIP();
+      const interfaces = await globalThis.api.getNetworkInterfaces();
+      const $select = $('#pixoo64Interface');
+      $select.append($('<option value="">Auto (default)</option>'));
+      for (const iface of interfaces) {
+        const selected = currentStored === iface.address ? ' selected' : '';
+        $select.append(
+          $(`<option value="${escapeHtml(iface.address)}"${selected}>${escapeHtml(iface.label)}</option>`)
+        );
+      }
+      $select.on('change', async () => {
+        const value = $select.val();
+        const address = value === '' || value === undefined ? null : String(value);
+        await globalThis.api.setExpressIPForPixoo(address);
+        expressIP = await globalThis.api.getExpressIPForPixoo();
+        $('#expressIP').text(`Express Server IP: ${expressIP}`);
+        if (debugOn) log(`Pixoo64 interface: ${address ?? 'auto'} -> ${expressIP}`);
+      });
+    })();
     $('#networkSettings').append(
       $('<div/>', {
         class: 'networkbuttons-container',
@@ -1336,10 +1364,14 @@ $(function () {
       }
     });
 
-    $('#restoreSettings').on('click', () => {
+    $('#restoreSettings').on('click', async () => {
       /* Setting the value of the input fields back to 127.0.0.1 and 10101. */
       $('#ip').val('127.0.0.1');
       $('#port').val(10101);
+      await globalThis.api.setExpressIPForPixoo(null);
+      $('#pixoo64Interface').val('');
+      expressIP = await globalThis.api.getExpressIPForPixoo();
+      $('#expressIP').text(`Express Server IP: ${expressIP}`);
       restoreSettings();
     });
   });

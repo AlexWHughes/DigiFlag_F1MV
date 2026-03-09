@@ -11,6 +11,7 @@
   "extraFlags": "Drapeaux supplémentaires",
   "failedToConnect": "Impossible de se connecter à MultiViewer",
   "failedToRetrieveCurrentSession": "Impossible de récupérer la session actuelle",
+  "interfaceForPixoo64": "Interface pour Pixoo64 (serveur GIF) :",
   "general": "Général",
   "language": "Langue",
   "layout": "Mise en page",
