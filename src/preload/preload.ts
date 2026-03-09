@@ -28,7 +28,7 @@ const api = {
   getVersion: (): Promise<string> => ipcRenderer.invoke('get-version'),
   getAlwaysOnTop: () => ipcRenderer.invoke('get-always-on-top'),
   setAlwaysOnTop: () => ipcRenderer.invoke('set-always-on-top'),
-  getPixooIP: (pixooIP: string) => ipcRenderer.invoke('get-pixooIP', pixooIP),
+  getPixooIP: (pixooIP: string[]) => ipcRenderer.invoke('get-pixooIP', pixooIP),
   getExpressIP: (): Promise<string> => ipcRenderer.invoke('get-expressIP'),
   getNetworkInterfaces: (): Promise<NetworkInterfaceOption[]> =>
     ipcRenderer.invoke('get-network-interfaces'),

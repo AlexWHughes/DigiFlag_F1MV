@@ -1,5 +1,5 @@
 import { ip } from 'address';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import express from 'express';
 import { readFileSync } from 'node:fs';
 import os from 'node:os';
@@ -26,9 +26,18 @@ expressApp
   .listen(9093, () => {
     console.log('API Started');
   })
-  .on('error', () => {
+  .on('error', (err: NodeJS.ErrnoException) => {
+    const message =
+      err.code === 'EADDRINUSE'
+        ? `Port 9093 is already in use. Another app or DigiFlag instance may be using it.\n\n${failedToLoadAPI.message}`
+        : failedToLoadAPI.message;
+    dialog.showMessageBoxSync({
+      type: 'error',
+      title: 'DigiFlag – API Error',
+      message,
+      buttons: ['Quit'],
+    });
     app.quit();
-    throw new Error(`${failedToLoadAPI}`);
   });
 
 let themes = {};

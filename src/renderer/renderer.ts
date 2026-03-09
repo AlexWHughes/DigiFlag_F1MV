@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import type { LTData, PixooData, PixooDeviceList } from './types/digiFlag.d.ts';
 import type { DriverNumbers, FilesConfig, Gifs, MapTheme, Theme } from './types/filesConfig.d.ts';
 import type { F1LiveTimingState, RaceControlMessages } from './types/multiViewerAPI.d.ts';
@@ -13,16 +14,16 @@ const config = {
   port: port,
 };
 
-let themes: Theme[];
-let mapThemes: MapTheme[];
+let themes: Theme[] = [];
+let mapThemes: MapTheme[] = [];
 /**
  * It takes a number of milliseconds as an argument, and returns a promise that resolves after that
  * number of milliseconds.
  * @param ms - The amount of time to wait before resolving the promise.
  */
 const timer = (ms: number) => new Promise((response) => setTimeout(response, ms));
-/* Declaring a variable called debugOn and assigning it a value of false. */
-let debugOn = true;
+/** Debug logging: true in dev (vite), false in production build. */
+let debugOn = import.meta.env.DEV === true;
 let expressIP = '';
 // let windowTransparency = false;
 let currentZoom = 1;
@@ -118,7 +119,7 @@ let blueFlagSwitch = false;
 let trackMapSwitch = false;
 let mvLogoSwitch = false;
 let extraFlagSwitch = false;
-let pixooIPs: string[];
+let pixooIPs: string[] = [];
 let pixoostartup = false;
 let isGifPlaying = false;
 const instanceWindowWidth = 800;
@@ -147,8 +148,8 @@ try {
   const response = await fetch('./filesConfiguration.json');
   if (response.ok) {
     const data: FilesConfig = (await response.json()) as FilesConfig;
-    themes = data.themes;
-    mapThemes = data.mapThemes;
+    themes = data.themes ?? [];
+    mapThemes = data.mapThemes ?? [];
   } else {
     throw new Error(`Failed to load file configuration: ${response.status}`);
   }
@@ -201,6 +202,11 @@ async function getExpressIP(): Promise<string> {
   if (debugOn) console.log(`Express IP: ${expressIP}`);
   $('#expressIP').text(`Express Server IP: ${expressIP}`);
   return expressIP;
+}
+
+/** Base URL for Pixoo64 GIFs (theme 5 = Divoom Pixoo64). Use when building Pixoo64 GIF URLs. */
+function getPixooGifBaseUrl(): string {
+  return `http://${expressIP}:9093/getGifPixoo/5`;
 }
 
 let countDownRunning = false;
@@ -492,7 +498,9 @@ function saveSettings(host: string, port: number): void {
     const toastHeader = $('<div>').addClass('toast-header text-bg-success');
 
     // Add a strong element for the toast title with centering and margin utilities
-    toastHeader.append('<strong class="text-center me-auto">Network Settings Saved!</strong>');
+    toastHeader.append(
+      `<strong class="text-center me-auto">${i18next.t('toastNetworkSettingsSaved')}</strong>`
+    );
 
     // Add the close button for dismissing the toast
     toastHeader.append(
@@ -520,12 +528,12 @@ function saveSettings(host: string, port: number): void {
     $('#networkSettings > h5')
       .after(`<div class="toast text-bg-dark" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000" data-bs-autohide="true">
         <div class="toast-header text-bg-danger">
-          <strong class="me-auto">ERROR: Invalid Port!</strong>
+          <strong class="me-auto">${i18next.t('toastInvalidPortError')}</strong>
           <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-        Only Host Settings Saved !
-        <p>The Port Number ${port} is invalid. Please Enter a Valid Port Number Between 0 to 65535.</p>
+        ${i18next.t('toastOnlyHostSaved')}
+        <p>The Port Number ${port} is invalid. ${i18next.t('toastInvalidPortNumberBody')}</p>
         </div>
     </div>
         `);
@@ -558,18 +566,19 @@ function createNewInstance(url?: string | URL, windowTitle?: string) {
 }
 
 /**
- * It checks if the host and port data is not null, if it is not null, it sets the host and port
- * variables to the data stored in local storage.
- */
-/**
- * It clears the local storage and sets host and port back to default.
+ * Loads host and port from localStorage into config when present and valid.
  */
 function loadSettings() {
   const hostData = localStorage.getItem('host');
   const portData = localStorage.getItem('port');
-  if (hostData && portData !== null) {
+  if (hostData != null && hostData !== '') {
     config.host = hostData;
-    config.port = Number.parseInt(portData);
+  }
+  if (portData != null && portData !== '') {
+    const parsed = Number.parseInt(portData, 10);
+    if (!Number.isNaN(parsed) && parsed >= 1 && parsed <= 65535) {
+      config.port = parsed;
+    }
   }
 }
 
@@ -581,11 +590,11 @@ function restoreSettings() {
   $('#networkSettings > h5')
     .after(`<div class="toast text-bg-dark" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000" data-bs-autohide="true">
         <div class="toast-header text-bg-danger">
-          <strong class="text-center me-auto">Reset Network Settings!</strong>
+          <strong class="text-center me-auto">${i18next.t('toastResetNetworkSettings')}</strong>
           <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-        Reset Network Settings To Default Values!
+        ${i18next.t('toastResetNetworkSettingsBody')}
         </div>
     </div>
     `);
@@ -598,11 +607,11 @@ function ipInvalidToast() {
   $('#networkSettings > h5')
     .after(`<div class="toast text-bg-dark" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000" data-bs-autohide="true">
         <div class="toast-header text-bg-danger">
-          <strong class="text-center me-auto">Invalid IP Address!</strong>
+          <strong class="text-center me-auto">${i18next.t('toastInvalidIpAddress')}</strong>
           <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-        Please enter a valid IPv4 address (e.g., 192.168.0.1)
+        ${i18next.t('toastInvalidIpAddressBody')}
         </div>
     </div>
     `);
@@ -613,11 +622,11 @@ function portInvalidToast() {
   $('#networkSettings > h5')
     .after(`<div class="toast text-bg-dark" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000" data-bs-autohide="true">
         <div class="toast-header text-bg-danger">
-          <strong class="text-center me-auto">Invalid Port Number!</strong>
+          <strong class="text-center me-auto">${i18next.t('toastInvalidPortNumber')}</strong>
           <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-        Please enter a valid port number (0-65535)
+        ${i18next.t('toastInvalidPortNumberBody')}
         </div>
     </div>
     `);
@@ -735,11 +744,12 @@ function selectMapTheme(id: number) {
  */
 async function turnOff(flag: string, driverNumber?: string) {
   $('#currentPixooFlag').text(flag);
+  const base = getPixooGifBaseUrl();
   let url = '';
   if (driverNumber && raceYear) {
-    url = `http://${expressIP}:9093/getGifPixoo/5/DriverNumbers/${raceYear}/${flag}.gif`;
+    url = `${base}/DriverNumbers/${raceYear}/${flag}.gif`;
   } else {
-    url = `http://${expressIP}:9093/getGifPixoo/5/${flag}.gif`;
+    url = `${base}/${flag}.gif`;
     if (debugOn) console.log(`URL sent to Pixoo64: ${url}`);
   }
 
@@ -749,36 +759,34 @@ async function turnOff(flag: string, driverNumber?: string) {
 
   if (sc) {
     $('#digiflag').prop('src', getGifPath('sc'));
-    url = `http://${expressIP}:9093/getGifPixoo/5/sc.gif`;
+    url = `${base}/sc.gif`;
     return;
   }
 
   if (vsc) {
     $('#digiflag').prop('src', getGifPath('vsc'));
-    url = `http://${expressIP}:9093/getGifPixoo/5/vsc.gif`;
+    url = `${base}/vsc.gif`;
     return;
   }
 
   if (red) {
     $('#digiflag').prop('src', getGifPath('red'));
-    url = `http://${expressIP}:9093/getGifPixoo/5/red.gif`;
+    url = `${base}/red.gif`;
     return;
   }
 
   if (yellow) {
     $('#digiflag').prop('src', getGifPath('yellow'));
-    url = `http://${expressIP}:9093/getGifPixoo/5/yellow.gif`;
+    url = `${base}/yellow.gif`;
     return;
   }
 
   if (currentRainStatus === '1') {
     $('#digiflag').prop('src', getGifPath('rain'));
-    url = `http://${expressIP}:9093/getGifPixoo/5/rain.gif`;
+    url = `${base}/rain.gif`;
   } else {
     $('#digiflag').prop('src', getGifPath('void'));
-    url = mvLogoSwitch
-      ? `http://${expressIP}:9093/getGifPixoo/5/mv.gif`
-      : `http://${expressIP}:9093/getGifPixoo/5/void.gif`;
+    url = mvLogoSwitch ? `${base}/mv.gif` : `${base}/void.gif`;
   }
 
   if (currentMode.valueOf() === 1) {
@@ -837,12 +845,13 @@ async function changeGif(flag: string, mode: number, driverNumber?: string) {
     flag = `mv`;
   }
   if (mode === 1 && currentMode.valueOf() === 1) {
+    const base = getPixooGifBaseUrl();
     let url = '';
     if (driverNumber && raceYear) {
-      url = `http://${expressIP}:9093/getGifPixoo/5/DriverNumbers/${raceYear}/${flag}.gif`;
+      url = `${base}/DriverNumbers/${raceYear}/${flag}.gif`;
       if (debugOn) console.log(`Driver Number sent to Pixoo64: ${url}`);
     } else {
-      url = `http://${expressIP}:9093/getGifPixoo/5/${flag}.gif`;
+      url = `${base}/${flag}.gif`;
       if (debugOn) console.log(`URL sent to Pixoo64: ${url}`);
     }
     for (const pixooIP of pixooIPs) {
@@ -1352,11 +1361,11 @@ $(function () {
         $('#networkSettings > h5')
           .after(`<div class="toast text-bg-dark" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000" data-bs-autohide="true">
                         <div class="toast-header text-bg-danger">
-                          <strong class="text-center me-auto">Invalid Input!</strong>
+                          <strong class="text-center me-auto">${i18next.t('toastInvalidInput')}</strong>
                           <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                         </div>
                         <div class="toast-body">
-                        Both IP and Port fields must be filled out.
+                        ${i18next.t('toastBothIpPortRequired')}
                         </div>
                     </div>
                 `);
