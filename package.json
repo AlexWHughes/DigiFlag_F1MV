@@ -52,7 +52,7 @@
     "i18next": "^25.7.1",
     "i18next-browser-languagedetector": "^8.2.0",
     "i18next-fs-backend": "^2.6.1",
-    "i18next-http-backend": "^3.0.2",
+    "i18next-http-backend": "^3.0.5",
     "jquery": "^3.7.1",
     "jquery-i18next": "^1.2.1",
     "npm_f1mv_api": "^1.4.8"
